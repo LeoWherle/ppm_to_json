@@ -1,7 +1,7 @@
-import json
+import json 
 
 def normalize_rgb(rgb_values):
-    return [value/255 for value in rgb_values]
+    return [round(value/255, 3) for value in rgb_values]
 
 def ppm_to_json(ppm_file):
     try:
@@ -25,25 +25,33 @@ def ppm_to_json(ppm_file):
     row = []
     color_values = []
     i = 0
-    # Iterate through each pixel's RGB values
-    for value in contents:
-        color_values.append(int(value))
-        # If we have 3 RGB values, we have a pixel
-        if (i+1)%3 == 0:
-            # Normalize the RGB values (can be removed, if you prefer from 0 to 255)
-            normalized_color_values = normalize_rgb(color_values)
-            # Special use for other project
-            if sum(normalized_color_values) == 0:
-                normalized_color_values[2] = 0.01
-            # end of special use
-            row.append(normalized_color_values)
-            color_values = []
-            # If we have a full row, append it to the image
-            if (i+1)%(3*width) == 0:
-                image.append(row)
-                row = []
-        i += 1
 
-    # Write the image's pixels to a JSON file
-    with open('output.json', 'w') as f:
-        json.dump(image, f)
+# vec3[4](
+#         vec3(0.0, 0.0, 0.0),
+#         vec3(0.0, 0.0, 0.0),
+#         vec3(0.0, 0.0, 0.0),
+#         vec3(0.0, 0.0, 0.0)
+#     );
+
+    with open("output.fsh", 'w') as f:
+        f.write('vec3[32] (\n')
+        # Iterate through each pixel's RGB values
+        for value in contents:
+            color_values.append(int(value))
+            # If we have 3 RGB values, we have a pixel
+            if (i+1)%3 == 0:
+                # Normalize the RGB values (can be removed, if you prefer from 0 to 255)
+                normalized_color_values = normalize_rgb(color_values)
+                # Special use for other project
+                if sum(normalized_color_values) == 0:
+                    normalized_color_values[2] = 0.01
+                # end of special use
+                f.write('vec3({}, {}, {}),\n'.format(*normalized_color_values))
+                #row.append(normalized_color_values)
+                color_values = []
+                # If we have a full row, append it to the image
+#                if (i+1)%(3*width) == 0:
+#                    image.append(row)
+#                    row = []
+            i += 1
+        f.write(');')
